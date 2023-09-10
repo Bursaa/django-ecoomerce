@@ -8,8 +8,8 @@ import datetime
 urllib3.disable_warnings()
 
 # important settings for allegro configurations
-CLIENT_ID = "4efb05ce175841a89b1aa2248dab4f51"  # wprowadź Client_ID aplikacji
-CLIENT_SECRET = "pCQdmWikNutad9m5FFTAu6gVyTDcPj4N31OwUeWz9IhENqu8uVci8E4euKOYGoSA"  # wprowadź Client_Secret aplikacji
+CLIENT_ID = ""  # wprowadź Client_ID aplikacji
+CLIENT_SECRET = ""  # wprowadź Client_Secret aplikacji
 ENV_URL = "https://api.allegro.pl.allegrosandbox.pl/"
 TOKEN_URL = "https://allegro.pl.allegrosandbox.pl/auth/oauth/token"
 
