@@ -1,0 +1,92 @@
+{% extends 'store/main.html' %}
+{% load static%}
+
+{% block content %}
+    <header>
+        <h1>User Profile</h1>
+    </header>
+
+    <main>
+        <section class="profile">
+            <h2>{{ user.username }}</h2>
+            <p>Email: {{ user.email }}</p>
+            <p>Imię: {{ user.first_name }}</p>
+            <p>Nazwisko: {{ user.last_name }}</p>
+            <p>Numer telefonu: {{ customer.phone_number }}</p>
+        </section>
+
+         <section class="edit-profile">
+            <h2>Edit Profile</h2>
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label for="first-name">Imie:</label>
+                <input type="text" name="first_name" id="first-name" value="{{ user.first_name }}">
+                <label for="last-name">Nazwisko:</label>
+                <input type="text" name="last_name" id="last-name" value="{{ user.last_name }}">
+                <label for="email">Email:</label>
+                <input type="text" name="email" id="email" value="{{ user.email }}">
+                <label for="email">Numer Telefonu:</label>
+                <input type="text" name="phone_number" id="phone_number" value="{{ customer.phone_number }}">
+                <button class="btn btn-warning" action="{% url 'profile' %}" type="submit">Save Changes</button>
+            </form>
+        </section>
+    </main>
+
+    <style>
+    </style>
+
+
+    <section class="orders">
+        <h2>Zamówienia</h2>
+        {% for order in orders %}
+            <div class="input-group mb-3">
+                 <div class="input-group-text" style="flex-direction:column">
+                     <strong>ID Zamówienia:</strong> {{order.transaction_id}}
+                     <strong>Data Zamówienia:</strong> {{order.date_ordered}}
+                     <strong>Transakcja:</strong>
+                     {% if order.complete == True %}
+                        <a style="color:green">Ukończona</a>
+                     {% else %}
+                        <a style="color:red">Nieukończona</a>
+                     {% endif %}
+                </div>
+                <div class="input-group-text" style="flex-direction:column">
+                     <table>
+            <thead>
+                <tr>
+                    <th>Zdjecie Produktu:</th>
+                    <th>Nazwa Produktu:</th>
+                    <th>Ilość:</th>
+                    <th>Cena:</th>
+                    <th>Suma:</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orderitem in order.orderitem_set.all %}
+                    <tr>
+                        <td><img style="width:80px" src="{{orderitem.product.imageURL}}"></td>
+                        <td>{{ orderitem.product.name }}</td>
+                        <td>{{ orderitem.quantity }}</td>
+                        <td>{{ orderitem.product.price }}</td>
+                        <td>{{orderitem.get_total}} PLN</td>
+                    </tr>
+                {% endfor %}
+                <tr>
+                    <th></th>
+                    <th></th>
+                    <th></th>
+                    <th>Suma Zamówienia:</th>
+                    <th>{{order.get_cart_total}} PLN</th>
+                </tr>
+
+            </tbody>
+        </table>
+                </div>
+            </div>
+
+        {% endfor %}
+
+
+    </section>
+
+{% endblock content %}

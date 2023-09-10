@@ -1,0 +1,18 @@
+{% extends 'store/main.html' %}
+{% load static %}
+
+{% block content %}
+    <div class="product-container">
+        <div class="product-details">
+            <h1 class="product-title">{{product.name}}</h1>
+            <p class="product-description">{{product.description}}</p>
+            <p class="product-description">Stan magazynowy: {{product.max_quantity}}</p>
+            <p class="product-price">{{product.price|floatformat:2}} PLN</p>
+            <button data-product="{{product.id}}" data-action="add" data-max_quantity="{{product.max_quantity}}"
+                    class="btn btn-success add-btn update-cart" style="width:30%">Dodaj do koszyka</button>
+        </div>
+        <div class="product-image">
+            <img src="{{product.imageURL}}" alt="Zdjęcie produktu">
+        </div>
+    </div>
+{% endblock %}

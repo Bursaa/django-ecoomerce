@@ -1,0 +1,47 @@
+{% extends 'store/main.html' %}
+{% load static%}
+
+{% block content %}
+
+<div class="sidebar">
+    <h3 style="margin-left:10px; color:white;">Kategorie:</h3>
+    <a href="{% url 'store' %}"><h5 style="margin-left:10px; color:white;"> Wszystkie</h5></a>
+    {% for category in categories %}
+    <div style="clear:both;">
+        <a href="{% url 'categories' category.name %}" style="float:left;">{{category.name}} </a>
+        {% if category.subcategory_set.all %}
+            <img data-category="{{category.name}}" src="{% static 'images/dropdown.png' %}" class="dropdown-button" style="width:40px;float:right;">
+        {% endif %}
+
+        <div  id="{{category.name}}" class="hidden" data-category="{{category.name}}" style="clear:both;">
+            {% for subcategory in category.subcategory_set.all %}
+                <a style="padding-left:40px;" href="{% url 'subcategories' category.name subcategory.name %}">{{subcategory.name}}</a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div style="margin-left: 250px; padding: 10px;">
+
+    <div class="row">
+        {% for product in products %}
+            {% if product.max_quantity > 0 %}
+                <div class="col-lg-4">
+                    <img class="thumbnail" src="{{product.imageURL}}">
+                    <div class="box-element product">
+                        <h6><strong>{{product.name}}</strong> - stan magazynowy: {{product.max_quantity}}</h6>
+                        <hr>
+                        <button data-product="{{product.id}}" data-action="add"
+                                data-max_quantity="{{product.max_quantity}}"
+                                class="btn btn-outline-secondary add-btn update-cart">Dodaj do koszyka</button>
+                        <a class="btn btn-outline-success" href="{% url 'view_product' product.id %}">Wyświetl</a>
+                        <h4 style="display: inline-block; float: right">{{product.price|floatformat:2}} PLN</h4>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock content %}

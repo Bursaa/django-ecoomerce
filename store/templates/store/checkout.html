@@ -1,0 +1,237 @@
+{% extends 'store/main.html' %}
+{% load static%}
+
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box-element" id="form-wrapper">
+                <form id="form">
+                    {% csrf_token %}
+                    <div id="user-info">
+                        <div class="form-field">
+			                <input required class="form-control" type="text" name="name" placeholder="Imie i Nazwisko..">
+		                </div>
+		                <div class="form-field">
+			                <input required class="form-control" type="email" name="email" placeholder="Email..">
+		                </div>
+                    </div>
+                    <div id="phone_number">
+                        <div class="form-field">
+                            <label for="phone_number">Numer Telefonu:</label>
+                        </div>
+                        <div class="form-field">
+			                <input class="form-control" type="text" name="phone_number" value="{{customer_phone_number}}" required>
+                        </div>
+                    </div>
+
+                    <div id="shipping-info">
+                        <hr>
+						<p>Dane do dostawy:</p>
+						<hr>
+						<div class="form-field">
+							<input class="form-control" type="text" name="address" placeholder="Adres..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="city" placeholder="Miasto..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="state" placeholder="Województwo..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="country" placeholder="Kraj..">
+						</div>
+						<div class="form-field">
+							<input class="form-control" type="text" name="zipcode" placeholder="Kod pocztowy..">
+						</div>
+                    </div>
+                    <hr>
+                    <input id="form-button" class="btn btn-success btn-block" type="submit" value="Kontynuuj">
+                </form>
+            </div>
+            <br>
+
+            <div class="box-element hidden" id="payment-info">
+                <small> Opcje Płatności - PayPal</small>
+                <!--button id="make-payment">Make Payment</button>-->
+                <div id="paypal-button-container"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="box-element">
+                <a class="btn btn-outline-dark" href="{% url 'cart' %}">&#x2190; Koszyk</a>
+            </div>
+
+            <hr>
+            <h3>Order Summary</h3>
+            <hr>
+            {% for item in items %}
+                <div class="cart-row">
+                    <div style="flex:2"><img class="row-image" src="{{item.product.imageURL}}"></div>
+                    <div style="flex:2"><p>{{item.product.name}}</p></div>
+                    <div style="flex:1"><p>{{item.product.price|floatformat:2}} PLN</p></div>
+                    <div style="flex:1"><p class="quantity">{{item.quantity}}</p></div>
+                </div>
+            {% endfor %}
+
+            <h5>Przedmioty: {{order.get_cart_items}}</h5>
+            <h5>Suma: {{order.get_cart_total|floatformat:2}} PLN</h5>
+        </div>
+    </div>
+
+
+ <!-- Include the PayPal JavaScript SDK -->
+    <script src="https://www.paypal.com/sdk/js?client-id=ASu1Z9SMs3NqFC8QDOTXJ26GZ9JJIKjEvTiYbtDFv5bpQhKCAA7mkKhe4g0ryQ8GzBX53FacAOnkdbx2&currency=PLN"></script>
+
+    <script>
+        var total = '{{order.get_cart_total}}'
+
+        style:{color:'blue'}
+
+        // Render the PayPal button into #paypal-button-container
+        paypal.Buttons({
+
+            // Set upp transaction
+            createOrder: function(data, actions) {
+                var form = document.getElementById('form');
+
+                 var userFormData = {
+                'name': null,
+                'email': null,
+                'total': total,
+                }
+                var customerPhone  = form.phone_number.value
+
+                if(user == 'AnonymousUser'){
+                userFormData.name = form.name.value
+                userFormData.email = form.email.value
+                }
+
+
+                return fetch('/check_quantity/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': get_csrf()  // Uzyskaj token CSRF
+                    },
+
+                    body: JSON.stringify({
+                    'form': userFormData,
+                    'customer': customerPhone,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data)
+                    if (data.result)
+                    {
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: parseFloat(total).toFixed(2)
+                                }
+                            }]
+                        });
+                    }
+                    else
+                    {
+                        var message = "Transaction problem, check quantity of products: "
+                        for(var i = 0; i < data.trouble_items.length; i++)
+                        {
+                            message += String(data.trouble_items[i]) + ";"
+                        }
+                        alert(message);
+                    }
+                });
+            },
+
+            //Finalize the transaction
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                //Show a success massage to the buyer
+                    submitFormData();
+                });
+            }
+
+
+
+        }).render('#paypal-button-container');
+    </script>
+
+    <script type="text/javascript">
+
+
+        if(user != 'AnonymousUser'){
+            document.getElementById('user-info').innerHTML = ''
+        }
+
+
+        var form = document.getElementById('form');
+
+        csrftoken = form.getElementsByTagName("input")[0].value;
+
+        form.addEventListener("submit",function(e){
+            e.preventDefault();
+            console.log('Form submitted successfully');
+            document.getElementById('form-button').classList.add("hidden");
+            document.getElementById('payment-info').classList.remove("hidden");
+        })
+
+        function get_csrf(){ return csrftoken; }
+
+        function submitFormData(){
+
+            var userFormData = {
+                'name': null,
+                'email': null,
+                'total': total,
+            }
+
+            var shippingInfo ={
+                'address': null,
+                'city': null,
+                'state': null,
+                'country': null,
+                'zipcode': null,
+            }
+
+            var customerPhone  = form.phone_number.value
+
+            shippingInfo.address = form.address.value
+            shippingInfo.city = form.city.value
+            shippingInfo.state = form.state.value
+            shippingInfo.country = form.country.value
+            shippingInfo.zipcode = form.zipcode.value
+
+            if(user == 'AnonymousUser'){
+                userFormData.name = form.name.value
+                userFormData.email = form.email.value
+            }
+            var url = '/process_order/'
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken,
+                },
+
+                body: JSON.stringify({
+                    'form': userFormData,
+                    'customer': customerPhone,
+                    'shipping': shippingInfo,
+                }),
+            })
+            .then((response) => response.json())
+            .then((data) => {
+                alert('Transaction completed');
+
+                cart = {}
+                document.cookie = 'cart=' + JSON.stringify(cart) +";domain=;path=/"
+
+                window.location.href = "{% url 'store' %}"
+            })
+
+        }
+    </script>
+{% endblock content %}
